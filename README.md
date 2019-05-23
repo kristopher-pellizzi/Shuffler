@@ -1,5 +1,5 @@
 # Shuffler
-*Utility android app thought to shuffle tracks among all user's playlists*
+*Utility Android app thought to shuffle tracks among all user's playlists*
 
 ## Introduction
 This app has been thoguht initially for personal use only. I am used to create playlists named with artist's name, therefore my playlist library on Spotify counts many playlists, many of which, however, contain a single song, or few of them.
