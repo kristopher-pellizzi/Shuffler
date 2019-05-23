@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Shuffler</string>
+    <string name="main_activity_bootstrap">Shuffler is connecting to Spotify...</string>
+    <string name="connected">Shuffler has connected successfully</string>
+    <string name="connection_failed">Shuffler couldn\'t connect to Spotify.</string>
+    <string name="client_id">49be20c3edd84e75adc609b81a313ba2</string>
+    <string name="redirect_callback">shuffler://callback</string>
+    <string name="web_api_error_response">Sorry, there has been an error processing your request.</string>
+    <string name="auth_request_code">10926</string>
+    <string name="auth_error_response">Sorry, something gone wrong while processing the request for your access token</string>
+    <string name="default_response_type_switch">Sorry, something gone wrong</string>
+    <string name="playlists_request_url">https://api.spotify.com/v1/me/playlists?limit=50</string>
+    <string name="playlist_tracks_request_url">https://api.spotify.com/v1/playlists/</string>
+    <string name="no_connection_available">Sorry, you must be connected to a network to let Shuffler work</string>
+    <string name="no_playlists_found">You have no playlists in your Spotify account</string>
+    <string name="wait_for_track_loading">Shuffler is getting tracks from all your playlists. It may take a while, please wait</string>
+    <string name="default_spotify_queue_length">20</string>
+</resources>
