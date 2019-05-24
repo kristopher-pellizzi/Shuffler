@@ -10,6 +10,17 @@ So, I started developing Shuffler. It makes use of [Spotify Web API](https://dev
 - Shuffler requires the user to have a Spotify Premium subscription, otherwise many Spotify functionalities and API are disabled, and it would be impossible to control the queue and the playback.
 - Obviously, Shuffler also needs an Internet connection to be able to authenticate the user and to retrieve up-to-date information about playlists and tracks.
 
+## Installation
+Go to the [releases](https://github.com/kristopher-pellizzi/Shuffler/releases) page of the project and download the last version of the apk archive.
+On the Android device, go to Settings and enable apps from Unknown Sources. This step is different according to the different models of devices and versions of Android. Usually, the path is Settings > Advanced > Security.
+Then, transfer the apk archive on the Android devices, if it is not already there, and open it.
+A system prompt will ask a confirmation to install the archive from an unknown source. Accept.
+Probably, there will be another prompt by Google services, warning the user that the developer of the app is unknown to Google Play developers database and asking again for user's confirmation. Again, accept it.
+After that, Shuffler will be installed on the device, and ready to be used.
+Please, read the [Usage] and [Limitations] sections in the document to be fully aware of what the application can do and which are the main issues to be solved in the current release version.
+
+If you find any unreported bug, or problem, or even if you have suggestions for possible functionalities or you are interested in becoming a contributor of the project, please contact me at krijojo@gmail.com, using Shuffler as part of the mail subject.
+
 ## Usage
 Shuffler is very ease to use. It is sufficient to open the application. Automatically, Shuffler will attempt to authenticate the user. In case it is not possible to do it in an automatic fashion, Shuffler should prompt the user to login to its Spotify account. Once the user is logged, Shuffler starts retrieving playlists and tracks from the logged account.
 
