@@ -17,7 +17,7 @@ Then, transfer the apk archive on the Android devices, if it is not already ther
 A system prompt will ask a confirmation to install the archive from an unknown source. Accept.
 Probably, there will be another prompt by Google services, warning the user that the developer of the app is unknown to Google Play developers database and asking again for user's confirmation. Again, accept it.
 After that, Shuffler will be installed on the device, and ready to be used.
-Please, read the [Usage] and [Limitations] sections in the document to be fully aware of what the application can do and which are the main issues to be solved in the current release version.
+Please, read the [Usage](#Usage) and [Limitations](#Shuffler v0.1-alpha limitations) sections in the document to be fully aware of what the application can do and which are the main issues to be solved in the current release version.
 
 If you find any unreported bug, or problem, or even if you have suggestions for possible functionalities or you are interested in becoming a contributor of the project, please contact me at krijojo@gmail.com, using Shuffler as part of the mail subject.
 
