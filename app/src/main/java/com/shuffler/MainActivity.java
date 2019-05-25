@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 // TODO: avoid that the background task is closed when the main activity is closed by either the user or the system
 // TODO: add memory and disk caches to avoid loading playlists and tracks from the web api each time the App is opened
 // TODO: if the enqueueing service is already active, directly allow user to interrupt the service
+// TODO: add a way to check whether device is huawei and alert user to put the app among protected apps
 public class MainActivity extends AppCompatActivity {
     private String CLIENT_ID;
     private String REDIRECT_CALLBACK;

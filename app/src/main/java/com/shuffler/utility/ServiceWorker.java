@@ -333,9 +333,10 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         synchronized (playerState) {
             synchronized (startingPlayback) {
                 if(this.playerState != null && !this.playerState.track.uri.equals(playerState.track.uri)){
+                    // if the song launched in playback is not the first track retrieved
                     if(!startingPlayback.getValue()) {
-                        updateSpotifyQueue(playerState.track.uri);
                         synchronized (spotifyQueue) {
+                            updateSpotifyQueue(playerState.track.uri);
                             if (spotifyQueue.size() <= 2)
                                 enqueue();
                         }
@@ -351,8 +352,10 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
     private void updateSpotifyQueue(String launchedTrack){
         String trackUri;
 
-        do{
-            trackUri = spotifyQueue.remove(0);
-        } while (!trackUri.equals(launchedTrack) && !spotifyQueue.isEmpty());
+        synchronized (spotifyQueue) {
+            do {
+                trackUri = spotifyQueue.remove(0);
+            } while (!trackUri.equals(launchedTrack) && !spotifyQueue.isEmpty());
+        }
     }
 }
