@@ -1,19 +1,19 @@
 package com.shuffler.spotify.listener;
 
-import com.shuffler.MainActivity;
+import com.shuffler.handler.PlayerStateUpdateHandler;
 import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.types.PlayerState;
 
 public class PlayerStateCallback implements CallResult.ResultCallback<PlayerState> {
 
-    private MainActivity main;
+    private PlayerStateUpdateHandler handler;
 
-    public PlayerStateCallback(MainActivity activity){
-        main = activity;
+    public PlayerStateCallback(PlayerStateUpdateHandler handler){
+        this.handler = handler;
     }
 
     @Override
     public void onResult(PlayerState playerState) {
-        main.updatePlayerState(playerState);
+        handler.updatePlayerState(playerState);
     }
 }

@@ -15,4 +15,10 @@
     <string name="no_playlists_found">You have no playlists in your Spotify account</string>
     <string name="wait_for_track_loading">Shuffler is getting tracks from all your playlists. It may take a while, please wait</string>
     <string name="default_spotify_queue_length">20</string>
+    <string name="service_launched">The enqueueing service has been launched. Please, DO NOT CLOSE THE PROCESS from the recent apps, otherwise the enqueueing task will be close as well</string>
+    <string name="no_premium_subscription">Sorry. You need a premium subscription to Spotify in order to have on demand playback capabilities. To make Shuffler work properly, login with a Spotify premium account.</string>
+    <string name="checking_for_premium_subscription">Shuffler is checking whether your Spotify account has a premium subscription</string>
+    <string name="enqueueing_service_notification_text">Enqueueing task is active</string>
+    <string name="enqueueing_service_notification_big_text">Shuffler activated a service to continuously update your Spotify queue.
+The service will close itself when all tracks have been enqueued once.</string>
 </resources>

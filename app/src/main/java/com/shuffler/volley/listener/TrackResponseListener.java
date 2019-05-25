@@ -2,19 +2,20 @@ package com.shuffler.volley.listener;
 
 import com.android.volley.Response;
 import com.shuffler.MainActivity;
+import com.shuffler.handler.RequestHandler;
 
 import org.json.JSONObject;
 
 public class TrackResponseListener implements Response.Listener<JSONObject> {
 
-    private MainActivity main;
+    private RequestHandler handler;
 
-    public TrackResponseListener(MainActivity activity){
-        main = activity;
+    public TrackResponseListener(RequestHandler handler){
+        this.handler = handler;
     }
 
     @Override
     public void onResponse(JSONObject response) {
-        main.manageTrackResponse(response);
+        handler.manageTrackResponse(response);
     }
 }
