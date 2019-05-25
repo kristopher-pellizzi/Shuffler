@@ -7,6 +7,7 @@ I thought it could be useful to have a functionality allowing to take songs from
 So, I started developing Shuffler. It makes use of [Spotify Web API](https://developer.spotify.com/documentation/web-api/) and [Spotify App Remote API](https://developer.spotify.com/documentation/android/) in order to be able to retrieve information about playlists and tracks of the currently logged user and creates a queue out of them.
 
 ## Pre-requisites
+- Shuffler requires that Spotify application is installed on the device and that the user has logged in it with its account
 - Shuffler requires the user to have a Spotify Premium subscription, otherwise many Spotify functionalities and API are disabled, and it would be impossible to control the queue and the playback.
 - Obviously, Shuffler also needs an Internet connection to be able to authenticate the user and to retrieve up-to-date information about playlists and tracks.
 
@@ -17,7 +18,7 @@ Then, transfer the apk archive on the Android devices, if it is not already ther
 A system prompt will ask a confirmation to install the archive from an unknown source. Accept.
 Probably, there will be another prompt by Google services, warning the user that the developer of the app is unknown to Google Play developers database and asking again for user's confirmation. Again, accept it.
 After that, Shuffler will be installed on the device, and ready to be used.
-Please, read the [Usage](#Usage) and [Limitations](#shuffler-v01-alpha-limitations) sections in the document to be fully aware of what the application can do and which are the main issues to be solved in the current release version.
+Please, read the [Usage](#Usage) and [Limitations][current-version-limitations] sections in the document to be fully aware of what the application can do and which are the main issues to be solved in the current release version.
 
 If you find any unreported bug, or problem, or even if you have suggestions for possible functionalities or you are interested in becoming a contributor of the project, please contact me at krijojo@gmail.com, using Shuffler as part of the mail subject.
 
@@ -32,6 +33,9 @@ To avoid these kind of problems, Shuffler won't enqueue all songs in the same mo
 
 Since there is not an easy way to clear Spotify's queue (up to now there is no API offering methods to clear it), the only way the user have to interrupt the enqueueing of tracks is interrupting Shuffler and jump to the last song in the queue. This way, Shuffler won't schedule any new track, and the queue will be considered consumed by the Spotify app.
 
+# Application versions information 
+*Current version: [v0.2-alpha][current-version]*
+
 ## Shuffler v0.1-alpha limitations
 - As explicitly announced in the description of the [release](https://github.com/kristopher-pellizzi/Shuffler/releases), this is a ***naive*** implementation. This means that the code is not optimized, nor well organized yet.
 - This is also my first Android app ever developed. Therefore probably the code won't follow many *best practices*, nor is well designed as a mobile application. I'm also exploiting this project to learn and improve myself. 
@@ -39,3 +43,20 @@ Since there is not an easy way to clear Spotify's queue (up to now there is no A
 Another missing check is on the error due to the number of requests to Spotify servers. As explained in the [Spotify Web API documentation](https://developer.spotify.com/documentation/web-api/), at section *Rate Limiting*, if too much requests are forwarded to Spotify servers, a response containing a status code 429 is sent back to the client. Shuffler won't check if this is happening, up to now. Therefore, if this happens, it will simply notify about the error, and stop working. Please, if this is the case be patient, a new version handling this situation will be out as soon as possible.
 - Since much of the content of users library is always the same, Shuffler has been designed to make use of memory and/or disk caches to keep track of user's playlists and tracks. However, this version completely lacks cache, and always retrieves all the information from user's account. This also prevents Shuffler from working without an active Internet connection.
 - The application is composed by a single activity, handling all the logic. This is not a good implementation, as the activity must handle both presentation of the UI and application's business logic. This also limits the freedom of the user: in order to work properly, Shuffler must keep its main activity open while the tracks are played in the player. If the Activity is closed, either by the user or by the system, also the enqueuing logic will be interrupted. As said above, I'll try to fix this ASAP.
+
+## Shuffler v0.2-alpha changelog
+- Main activity simply makes initial checks and login
+- A foreground service, in a new thread, implementing the enqueueing algorithm is launched after login
+- Error responses with status code 429 (Spotify's servers error due to the too high number of requests done) are managed
+- Before launching the foreground service, the application checks whether the user is logged with a premium Spotify account
+- Pending requests are tracked in order to be sure that all responses have been received and to re-perform requests triggering error status code 429
+
+## Shuffler v0.2-alpha limitations
+- Both memory and disk caches still miss, therefore, it's still necessary to have an active Internet connection in order to let the application work
+- Due to the lack of a proper method in the Spotify Web API or Spotify App Remote API, Shuffler can't have direct access to user's Spotify queue. There is a simple implementation of a queue embedded in the application, which tracks the songs played by Shuffler itself. However, if there is already a queue in the user's Spotify account, this might not work properly, at the beginning, causing the skipping of some tracks, or the repeat of some others. For the same reason, it might happen that the user's actual queue is longer than the default size. As soon as there will be methods available to get access to the queue, this will be fixed properly.
+
+### **Warning** for Huawei devices owners
+Shuffler makes use of a *foreground service* in order to allow the application enqueue new songs until the end without the application being actually open. In huawei devices, however, there is an implementation of *Protected Apps*. In practice, each app that is not set as 'Protected', will be closed when the screen is locked or the process is cleared from the recent apps tab. To allow Shuffler working properly, please enable it as a Protected App in the device settings. Usually, the path is Settings > Advanced > Battery > Protected Apps. However, this may vary according to the device model and Android version, as well. In future implementations there will be a disclaimer notifying the user about the necessity of declaring the application as a Protected App.
+
+[current-version]: #shuffler-v02-alpha-changelog
+[current-version-limitations]: #shuffler-v02-alpha-limitations
