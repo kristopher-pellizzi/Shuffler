@@ -1,4 +1,4 @@
-package com.shuffler.utility;
+package com.shuffler.service;
 
 import android.util.Pair;
 import android.widget.Toast;
@@ -14,9 +14,10 @@ import com.shuffler.MainActivity;
 import com.shuffler.R;
 import com.shuffler.handler.PlayerStateUpdateHandler;
 import com.shuffler.handler.RequestHandler;
-import com.shuffler.service.EnqueueingService;
 import com.shuffler.spotify.listener.PlayerStateCallback;
 import com.shuffler.spotify.listener.PlayerStateListener;
+import com.shuffler.utility.BooleanLock;
+import com.shuffler.utility.LookupList;
 import com.shuffler.volley.listener.ErrorListener;
 import com.shuffler.volley.listener.PlaylistsResponseListener;
 import com.shuffler.volley.listener.TrackResponseListener;
@@ -194,11 +195,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
                         .append("/tracks?offset=")
                         .append(offset);
                 String url = sb.toString();
-                try{
-                    forwardTracksRequest(url);
-                } catch(Exception e){
-                    e.printStackTrace();
-                }
+                forwardTracksRequest(url);
             }
         }
         // if there are no pending requests, we must check if there are playlistIDs left in the list. If so, it is sufficient to call forwardTracksRequest on the first element of the list
@@ -296,7 +293,6 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
                 return headers;
             }
         };
-        trackRequest.setShouldCache(false);
         trackRequest.setTag(this);
 
         int offsetIndex = url.indexOf("offset=");
@@ -353,9 +349,11 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         String trackUri;
 
         synchronized (spotifyQueue) {
-            do {
-                trackUri = spotifyQueue.remove(0);
-            } while (!trackUri.equals(launchedTrack) && !spotifyQueue.isEmpty());
+            if(spotifyQueue.contains(launchedTrack)) {
+                do {
+                    trackUri = spotifyQueue.remove(0);
+                } while (!trackUri.equals(launchedTrack) && !spotifyQueue.isEmpty());
+            }
         }
     }
 }

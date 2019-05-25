@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 // TODO: add memory and disk caches to avoid loading playlists and tracks from the web api each time the App is opened
 // TODO: if the enqueueing service is already active, directly allow user to interrupt the service
 // TODO: add a way to check whether device is huawei and alert user to put the app among protected apps
+// TODO: what if Spotify is not installed? Error? Which kind of error?
 public class MainActivity extends AppCompatActivity {
     private String CLIENT_ID;
     private String REDIRECT_CALLBACK;
