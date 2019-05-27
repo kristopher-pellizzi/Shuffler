@@ -55,8 +55,8 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
     private final List<String> spotifyQueue = new ArrayList<>();
     private final BooleanLock startingPlayback = new BooleanLock();
     private final BooleanLock resumingServiceWork = new BooleanLock();
-    private Set<String> pendingPlaylistRequests;
-    private Set<Pair<String, String>> pendingTrackRequests;
+    private final Set<String> pendingPlaylistRequests = new HashSet<>();
+    private final Set<Pair<String, String>> pendingTrackRequests = new HashSet<>();
 
     public ServiceWorker(EnqueueingService service, String authToken) {
         queue = Volley.newRequestQueue(service.getApplicationContext());
@@ -65,8 +65,6 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         this.authToken = authToken;
         this.service = service;
         DEFAULT_SPOTIFY_QUEUE_LENGTH = Integer.parseInt(service.getResources().getString(R.string.default_spotify_queue_length));
-        pendingPlaylistRequests = new HashSet<>();
-        pendingTrackRequests = new HashSet<>();
     }
 
     @Override
@@ -92,7 +90,9 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
 
             playlists.addAll(Arrays.asList(playlistArray));
             Collections.shuffle(playlists, ThreadLocalRandom.current());
-            pendingPlaylistRequests.remove(response.getString("offset"));
+            synchronized(pendingPlaylistRequests) {
+                pendingPlaylistRequests.remove(response.getString("offset"));
+            }
 
             if(!playlists.isEmpty()) {
                 // If the first set of playlist has been received, ask directly for the tracks inside it, to be able to
@@ -141,7 +141,9 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
             playlistID = playlistID.substring(0, playlistID.indexOf("/tracks"));
             String offset = response.getString("offset");
             Pair<String, String> requestIdentifier = new Pair<>(playlistID, offset);
-            pendingTrackRequests.remove(requestIdentifier);
+            synchronized (pendingTrackRequests) {
+                pendingTrackRequests.remove(requestIdentifier);
+            }
 
             //TODO: when the song is playing is finished, add saved tracks in queue and run playback, then continue managing requests
 
@@ -154,16 +156,20 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
             }
             else {
                 //if all requests have been sent, check whether there is any pending request
-                if(pendingPlaylistRequests.isEmpty() && pendingTrackRequests.isEmpty()) {
-                    Collections.shuffle(tracks, ThreadLocalRandom.current());
+                synchronized(pendingPlaylistRequests) {
+                    synchronized(pendingTrackRequests) {
+                        if (pendingPlaylistRequests.isEmpty() && pendingTrackRequests.isEmpty()) {
+                            Collections.shuffle(tracks, ThreadLocalRandom.current());
 
-                    StringBuilder sb = new StringBuilder("Done! Enjoy your ")
-                            .append(tracks.size() + spotifyQueue.size() + 1)
-                            .append(" tracks");
-                    synchronized (spotifyQueue) {
-                        enqueue();
+                            StringBuilder sb = new StringBuilder("Done! Enjoy your ")
+                                    .append(tracks.size() + spotifyQueue.size() + 1)
+                                    .append(" tracks");
+                            synchronized (spotifyQueue) {
+                                enqueue();
+                            }
+                            Toast.makeText(service, sb.toString(), Toast.LENGTH_SHORT).show();
+                        }
                     }
-                    Toast.makeText(service, sb.toString(), Toast.LENGTH_SHORT).show();
                 }
             }
         } catch (JSONException e) {
@@ -174,37 +180,41 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
     private void resumeServiceWork(){
         // check if there are pending requests to be forwarded, first
         StringBuilder sb;
-        if(!pendingPlaylistRequests.isEmpty()) {
-            String baseUrl = service.getResources().getString(R.string.playlists_request_url) + "&offset=";
-            for (String offset : pendingPlaylistRequests) {
-                sb = new StringBuilder(baseUrl)
-                        .append(offset);
-                forwardPlaylistsRequest(sb.toString());
+        synchronized(pendingPlaylistRequests) {
+            if (!pendingPlaylistRequests.isEmpty()) {
+                String baseUrl = service.getResources().getString(R.string.playlists_request_url) + "&offset=";
+                for (String offset : pendingPlaylistRequests) {
+                    sb = new StringBuilder(baseUrl)
+                            .append(offset);
+                    forwardPlaylistsRequest(sb.toString());
+                }
             }
         }
 
         // NOTE: the first call to forwardTracksRequest will start to call itself recursively to request all the tracks, therefore, even if there are playlistIDs left in the list, these
         // will be managed automatically, without starting calling forwardTracksRequest on the first element of the list
-        if(!pendingTrackRequests.isEmpty()){
-            String baseUrl = service.getResources().getString(R.string.playlist_tracks_request_url);
-            for (Pair<String, String> identifier : pendingTrackRequests){
-                String playlistID = identifier.first;
-                String offset = identifier.second;
-                sb = new StringBuilder(baseUrl)
-                        .append(playlistID)
-                        .append("/tracks?offset=")
-                        .append(offset);
-                String url = sb.toString();
-                forwardTracksRequest(url);
+        synchronized (pendingTrackRequests) {
+            if (!pendingTrackRequests.isEmpty()) {
+                String baseUrl = service.getResources().getString(R.string.playlist_tracks_request_url);
+                for (Pair<String, String> identifier : pendingTrackRequests) {
+                    String playlistID = identifier.first;
+                    String offset = identifier.second;
+                    sb = new StringBuilder(baseUrl)
+                            .append(playlistID)
+                            .append("/tracks?offset=")
+                            .append(offset);
+                    String url = sb.toString();
+                    forwardTracksRequest(url);
+                }
             }
-        }
-        // if there are no pending requests, we must check if there are playlistIDs left in the list. If so, it is sufficient to call forwardTracksRequest on the first element of the list
-        else{
-            if(!playlists.isEmpty()) {
-                sb = new StringBuilder(service.getResources().getString(R.string.playlist_tracks_request_url))
-                        .append(playlists.remove(0))
-                        .append("/tracks");
-                forwardTracksRequest(sb.toString());
+            // if there are no pending requests, we must check if there are playlistIDs left in the list. If so, it is sufficient to call forwardTracksRequest on the first element of the list
+            else {
+                if (!playlists.isEmpty()) {
+                    sb = new StringBuilder(service.getResources().getString(R.string.playlist_tracks_request_url))
+                            .append(playlists.remove(0))
+                            .append("/tracks");
+                    forwardTracksRequest(sb.toString());
+                }
             }
         }
         synchronized (resumingServiceWork){
@@ -267,12 +277,14 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         };
         playlistRequest.setTag(this);
         int offsetIndex = url.indexOf("offset=");
-        if(offsetIndex == -1)
-            pendingPlaylistRequests.add("0");
-        else {
-            String offsetSubString = url.substring(offsetIndex).split("=")[1];
-            String offset = offsetSubString.contains("&") ? offsetSubString.substring(0, offsetSubString.indexOf("&")) : offsetSubString;
-            pendingPlaylistRequests.add(offset);
+        synchronized (pendingPlaylistRequests) {
+            if (offsetIndex == -1)
+                pendingPlaylistRequests.add("0");
+            else {
+                String offsetSubString = url.substring(offsetIndex).split("=")[1];
+                String offset = offsetSubString.contains("&") ? offsetSubString.substring(0, offsetSubString.indexOf("&")) : offsetSubString;
+                pendingPlaylistRequests.add(offset);
+            }
         }
         queue.add(playlistRequest);
     }
@@ -307,7 +319,9 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         // Add a couple <playlistID, offset> to the list of pending tracks
         String playlistID = url.split("playlists/")[1];
         Pair<String, String> requestIdentifier = new Pair<>(playlistID.substring(0, playlistID.indexOf("/tracks")), offset);
-        pendingTrackRequests.add(requestIdentifier);
+        synchronized (pendingTrackRequests) {
+            pendingTrackRequests.add(requestIdentifier);
+        }
         queue.add(trackRequest);
     }
 
