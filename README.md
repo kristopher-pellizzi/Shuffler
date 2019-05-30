@@ -63,7 +63,7 @@ Shuffler v0.2-alpha uses a *foreground service* to perform the enqueueing task i
 - UI automatically updates after launching the Enqueueing Service, allowing the user to easily dismiss the service. Also, since a possible bug has been detected, a second **temporary** button is provided to the user to force the enqueue of tracks.
 
 ## Shuffler v0.3-alpha limitations
-- Same as v0.2-alpha. Check them out in the [Shuffler v0.2-alpha limitations][#shuffler-v02-alpha-limitations] section.
+- Same as v0.2-alpha. Check them out in the [Shuffler v0.2-alpha limitations](#shuffler-v02-alpha-limitations) section.
 - The UI won't update again after service is dismissed. In order to relaunch the service the user must close the application from the recent apps tab and relaunch Shuffler.
 
 ## **Warning** for Huawei devices owners only
