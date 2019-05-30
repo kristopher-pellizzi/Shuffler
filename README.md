@@ -63,8 +63,8 @@ Shuffler v0.2-alpha uses a *foreground service* to perform the enqueueing task i
 - UI automatically updates after launching the Enqueueing Service, allowing the user to easily dismiss the service. Also, since a possible bug has been detected, a second **temporary** button is provided to the user to force the enqueue of tracks.
 
 ## Shuffler v0.3-alpha limitations
-[-] Same as v0.2-alpha. Check them out in the [Shuffler v0.2-alpha limitations][#shuffler-v02-alpha-limitations] section.
-[-] The UI won't update again after service is dismissed. In order to relaunch the service the user must close the application from the recent apps tab and relaunch Shuffler.
+- Same as v0.2-alpha. Check them out in the [Shuffler v0.2-alpha limitations][#shuffler-v02-alpha-limitations] section.
+- The UI won't update again after service is dismissed. In order to relaunch the service the user must close the application from the recent apps tab and relaunch Shuffler.
 
 ## **Warning** for Huawei devices owners only
 Shuffler makes use of a *foreground service* in order to allow the application enqueue new songs until the end without the application being actually open. In huawei devices, however, there is an implementation of *Protected Apps*. In practice, each app that is not set as 'Protected', will be closed when the screen is locked or the process is cleared from the recent apps tab. To allow Shuffler working properly, please enable it as a Protected App in the device settings. Usually, the path is Settings > Advanced > Battery > Protected Apps. However, this may vary according to the device model and Android version, as well. In future implementations there will be a disclaimer notifying the user about the necessity of declaring the application as a Protected App.
