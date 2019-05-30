@@ -1,5 +1,6 @@
 package com.shuffler;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.content.BroadcastReceiver;
@@ -9,6 +10,8 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -17,8 +20,10 @@ import androidx.core.app.NotificationCompat;
 
 import com.shuffler.broadcast.receiver.NetworkStateChangeListener;
 import com.shuffler.service.EnqueueingService;
+import com.shuffler.service.ServiceWorker;
 import com.shuffler.spotify.listener.CapabilitiesCallback;
 import com.shuffler.spotify.listener.ConnectionListener;
+import com.shuffler.utility.ForceEnqueueBtnListener;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.types.Capabilities;
@@ -27,16 +32,15 @@ import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
 import java.nio.channels.Channels;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 // TODO: add splash screen
-// TODO: avoid that the background task is closed when the main activity is closed by either the user or the system
 // TODO: add memory and disk caches to avoid loading playlists and tracks from the web api each time the App is opened
-// TODO: if the enqueueing service is already active, directly allow user to interrupt the service
 // TODO: add a way to check whether device is huawei and alert user to put the app among protected apps
-// TODO: what if Spotify is not installed? Error? Which kind of error?
+
 public class MainActivity extends AppCompatActivity {
     private String CLIENT_ID;
     private String REDIRECT_CALLBACK;
@@ -45,25 +49,46 @@ public class MainActivity extends AppCompatActivity {
     private ConnectionListener connectionListener;
     private ConnectionParams params;
     private TextView mainMessage;
+    private BroadcastReceiver br = null;
+
+    private void createUI(){
+        if(isServiceRunning()) {
+            setContentView(R.layout.service_running);
+            Button forceEnqBtn = (Button)findViewById(R.id.force_enq_btn);
+            forceEnqBtn.setOnClickListener(new ForceEnqueueBtnListener());
+        }
+        else {
+            setContentView(R.layout.activity_main);
+            CLIENT_ID = getResources().getString(R.string.client_id);
+            REDIRECT_CALLBACK = getResources().getString(R.string.redirect_callback);
+            mainMessage = (TextView) findViewById(R.id.main_message);
+            connectionListener = new ConnectionListener(this);
+            params = new ConnectionParams.Builder(CLIENT_ID)
+                    .setRedirectUri(REDIRECT_CALLBACK)
+                    .showAuthView(true)
+                    .build();
+
+            br = new NetworkStateChangeListener();
+            IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+            registerReceiver(br, filter);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        createUI();
+    }
 
-        CLIENT_ID = getResources().getString(R.string.client_id);
-        REDIRECT_CALLBACK = getResources().getString(R.string.redirect_callback);
-        mainMessage = (TextView) findViewById(R.id.main_message);
-        connectionListener = new ConnectionListener(this);
-        params = new ConnectionParams.Builder(CLIENT_ID)
-                .setRedirectUri(REDIRECT_CALLBACK)
-                .showAuthView(true)
-                .build();
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(br != null)
+            unregisterReceiver(br);
+    }
 
-        BroadcastReceiver br = new NetworkStateChangeListener();
-        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(br, filter);
+    private boolean isServiceRunning(){
+        return EnqueueingService.isRunning;
     }
 
     public void connect(){
@@ -126,6 +151,10 @@ public class MainActivity extends AppCompatActivity {
         return mSpotifyAppRemote;
     }
 
+    public void stopService(View view){
+        stopService(new Intent(this, EnqueueingService.class));
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -140,21 +169,10 @@ public class MainActivity extends AppCompatActivity {
                     mainMessage.setText(R.string.wait_for_track_loading);
                     Intent service = new Intent(this, EnqueueingService.class)
                             .putExtra("token", authToken);
+                    setContentView(R.layout.service_running);
+                    Button forceEnqBtn = (Button) findViewById(R.id.force_enq_btn);
+                    forceEnqBtn.setOnClickListener(new ForceEnqueueBtnListener());
                     startService(service);
-                    mainMessage.setText(R.string.service_launched);
-                    Executors.newSingleThreadScheduledExecutor().schedule(
-                            new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    finish();
-                                }
-                            },
-
-                            3,
-
-                            TimeUnit.SECONDS
-                    );
                     break;
 
                 case ERROR:

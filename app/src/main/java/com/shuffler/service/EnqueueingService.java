@@ -10,12 +10,16 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 
+import com.shuffler.MainActivity;
 import com.shuffler.R;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 
 public class EnqueueingService extends Service {
+
+    public static boolean isRunning;
+    public static ServiceWorker worker;
 
     public EnqueueingService() {
         super();
@@ -34,8 +38,18 @@ public class EnqueueingService extends Service {
                 .build();
         startForeground(ThreadLocalRandom.current().nextInt(), notification);
 
-        new ServiceWorker(this, authToken).start();
+        isRunning = true;
+
+        worker = new ServiceWorker(this, authToken);
+        worker.start();
         return START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        worker.interrupt();
+        stopForeground(true);
+        super.onDestroy();
     }
 
     // TODO: implement onBind callback

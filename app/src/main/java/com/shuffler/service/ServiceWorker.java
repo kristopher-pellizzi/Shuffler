@@ -23,6 +23,7 @@ import com.shuffler.volley.listener.PlaylistsResponseListener;
 import com.shuffler.volley.listener.TrackResponseListener;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.PlayerState;
 
 import org.json.JSONArray;
@@ -51,6 +52,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
     private PlayerState playerState = null;
     private List<String> playlists;
     private List<String> tracks;
+    private Subscription<PlayerState> subscription;
     private static Integer DEFAULT_SPOTIFY_QUEUE_LENGTH;
     private final List<String> spotifyQueue = new ArrayList<>();
     private final BooleanLock startingPlayback = new BooleanLock();
@@ -72,8 +74,16 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         mSpotifyAppRemote = MainActivity.getAppRemote();
         player = mSpotifyAppRemote.getPlayerApi();
         player.getPlayerState().setResultCallback(new PlayerStateCallback(this));
-        player.subscribeToPlayerState().setEventCallback(new PlayerStateListener(this));
+        subscription = player.subscribeToPlayerState().setEventCallback(new PlayerStateListener(this));
         forwardPlaylistsRequest(service.getResources().getString(R.string.playlists_request_url));
+    }
+
+    @Override
+    public void interrupt() {
+        subscription.cancel();
+        queue.stop();
+        queue.cancelAll(this);
+        super.interrupt();
     }
 
     public void managePlaylistResponse(JSONObject response){
@@ -159,7 +169,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
                 synchronized(pendingPlaylistRequests) {
                     synchronized(pendingTrackRequests) {
                         if (pendingPlaylistRequests.isEmpty() && pendingTrackRequests.isEmpty()) {
-                            Collections.shuffle(tracks, ThreadLocalRandom.current());
+                            shuffle();
 
                             StringBuilder sb = new StringBuilder("Done! Enjoy your ")
                                     .append(tracks.size() + spotifyQueue.size() + 1)
@@ -229,7 +239,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
             synchronized (resumingServiceWork) {
                 if (!resumingServiceWork.getValue()) {
                     resumingServiceWork.toggle();
-                    Collections.shuffle(tracks, ThreadLocalRandom.current());
+                    shuffle();
                     synchronized (spotifyQueue) {
                         enqueue();
                     }
@@ -325,7 +335,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         queue.add(trackRequest);
     }
 
-    private void enqueue(){
+    public void enqueue(){
         synchronized (spotifyQueue) {
             while (!tracks.isEmpty() && spotifyQueue.size() < DEFAULT_SPOTIFY_QUEUE_LENGTH) {
                 String track = tracks.remove(0);
@@ -370,4 +380,11 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
             }
         }
     }
+
+    private void shuffle(){
+        for (int i = 0; i < 3; i++){
+            Collections.shuffle(tracks, ThreadLocalRandom.current());
+        }
+    }
+
 }
