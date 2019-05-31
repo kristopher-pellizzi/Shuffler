@@ -23,4 +23,5 @@ The service will close itself when all tracks have been enqueued once.</string>
     <string name="service_running">The service is already running. Tap on \"Dismiss service\" to interrupt the EnqueueingService. Tap on \"Force Enqueueing\" to manually call the enqueueing routine.\nNOTE: the manually call is thought to be a temporarily button useful in case the service is still running, but is not updating the queue</string>
     <string name="dismiss_btn">Dismiss Service</string>
     <string name="force_enq_btn">Force Enqueueing</string>
+    <string name="client_not_found">Sorry, in order to make Shuffler work, Spotify must be installed on your device. Please install Spotify from the Play Store, login and open the application again</string>
 </resources>

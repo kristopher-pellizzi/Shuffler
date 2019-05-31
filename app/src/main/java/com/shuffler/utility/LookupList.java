@@ -191,7 +191,7 @@ public class LookupList<T> implements List<T> {
     @androidx.annotation.NonNull
     @Override
     public ListIterator<T> listIterator(int index) {
-        return list.listIterator(0);
+        return list.listIterator(index);
     }
 
     @androidx.annotation.NonNull

@@ -1,8 +1,5 @@
 package com.shuffler;
 
-import android.app.ActivityManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,11 +13,9 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
 
 import com.shuffler.broadcast.receiver.NetworkStateChangeListener;
 import com.shuffler.service.EnqueueingService;
-import com.shuffler.service.ServiceWorker;
 import com.shuffler.spotify.listener.CapabilitiesCallback;
 import com.shuffler.spotify.listener.ConnectionListener;
 import com.shuffler.utility.ForceEnqueueBtnListener;
@@ -30,12 +25,6 @@ import com.spotify.protocol.types.Capabilities;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
-
-import java.nio.channels.Channels;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 // TODO: add splash screen
 // TODO: add memory and disk caches to avoid loading playlists and tracks from the web api each time the App is opened
@@ -92,12 +81,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void connect(){
-        mainMessage.setText(R.string.main_activity_bootstrap);
-        if(checkConnection()) {
-            SpotifyAppRemote.connect(this, params, connectionListener);
+        if(!SpotifyAppRemote.isSpotifyInstalled(this)){
+            mainMessage.setText(R.string.client_not_found);
         }
-        else{
-            mainMessage.setText(R.string.no_connection_available);
+        else {
+            mainMessage.setText(R.string.main_activity_bootstrap);
+            if (checkConnection()) {
+                SpotifyAppRemote.connect(this, params, connectionListener);
+            } else {
+                mainMessage.setText(R.string.no_connection_available);
+            }
         }
     }
 
