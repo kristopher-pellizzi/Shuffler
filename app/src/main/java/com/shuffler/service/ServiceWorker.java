@@ -14,9 +14,11 @@ import com.android.volley.toolbox.Volley;
 import com.shuffler.MainActivity;
 import com.shuffler.R;
 import com.shuffler.handler.PlayerStateUpdateHandler;
+import com.shuffler.handler.QueueRequestHandler;
 import com.shuffler.handler.RequestHandler;
 import com.shuffler.spotify.listener.PlayerStateCallback;
 import com.shuffler.spotify.listener.PlayerStateListener;
+import com.shuffler.spotify.listener.QueueErrorCallback;
 import com.shuffler.utility.BooleanLock;
 import com.shuffler.utility.LookupList;
 import com.shuffler.volley.listener.ErrorListener;
@@ -24,7 +26,9 @@ import com.shuffler.volley.listener.PlaylistsResponseListener;
 import com.shuffler.volley.listener.TrackResponseListener;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.client.Subscription;
+import com.spotify.protocol.types.Empty;
 import com.spotify.protocol.types.PlayerState;
 
 import org.json.JSONArray;
@@ -43,7 +47,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-public class ServiceWorker extends Thread implements RequestHandler, PlayerStateUpdateHandler {
+public class ServiceWorker extends Thread implements RequestHandler, PlayerStateUpdateHandler, QueueRequestHandler {
 
     private EnqueueingService service;
     private RequestQueue queue;
@@ -342,15 +346,46 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         synchronized (spotifyQueue) {
             while (!tracks.isEmpty() && spotifyQueue.size() < DEFAULT_SPOTIFY_QUEUE_LENGTH) {
                 String track = tracks.remove(0);
-                spotifyQueue.add(track);
-                player.queue(track);
+                //spotifyQueue.add(track);
+                int currentLength = spotifyQueue.size();
+
+
+                try {
+                    // Unfortunately, the only thing it can be done is assume that, if after 100 milliseconds an error is not received, the track has been successfully enqueued
+                    // Trying to set a ResultCallback on the player.queue CallResult, but it seems it never receives a result, therefore the callback is never invoked
+
+                    CallResult<Empty> callResult = null;
+                    while(spotifyQueue.size() == currentLength) {
+                        if(callResult != null)
+                            callResult.cancel();
+                        callResult = (CallResult<Empty>) player.queue(track).setErrorCallback(new QueueErrorCallback(this, track));
+                        spotifyQueue.add(track);
+                        spotifyQueue.wait(100);
+                    }
+                } catch (InterruptedException e) {
+                    Log.e(this.getClass().getName(), "Call to wait() in method ServiceWorker.enqueue() threw an InterruptedException");
+                }
+
             }
         }
-        if(tracks.isEmpty()){
-            service.stopForeground(true);
-            service.stopSelf();
+        synchronized (pendingPlaylistRequests){
+            synchronized (pendingTrackRequests){
+                if(tracks.isEmpty() && pendingTrackRequests.isEmpty() && pendingPlaylistRequests.isEmpty()){
+                    service.stopForeground(true);
+                    service.stopSelf();
+                }
+            }
         }
     }
+
+    @Override
+    public void failedQueueRequest(String track) {
+        synchronized(spotifyQueue){
+            spotifyQueue.remove(track);
+            spotifyQueue.notifyAll();
+        }
+    }
+
 
     public void updatePlayerState(PlayerState playerState){
         synchronized (playerState) {
@@ -391,5 +426,4 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         }
         Collections.reverse(list);
     }
-
 }

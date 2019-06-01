@@ -52,10 +52,10 @@ public class EnqueueingService extends Service {
         super.onDestroy();
     }
 
-    // TODO: implement onBind callback
+    // This service is not thought to be bound. It won't accept requests by any application. It simply launches a thread listening for Spotify's player state changes and react to them
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return null;
     }
 }

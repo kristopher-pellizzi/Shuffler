@@ -100,7 +100,6 @@ public class MainActivity extends AppCompatActivity {
         return (info != null && info.isConnected());
     }
 
-    // TODO: check if SerializableAppRemote constructor or passing through intent causes exceptions
     public void setSpotifyAppRemote(SpotifyAppRemote mSpotifyAppRemote){
         this.mSpotifyAppRemote = mSpotifyAppRemote;
     }
