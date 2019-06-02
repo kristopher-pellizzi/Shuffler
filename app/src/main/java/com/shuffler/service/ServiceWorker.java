@@ -1,10 +1,16 @@
 package com.shuffler.service;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
 import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.android.volley.AuthFailureError;
+import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -16,6 +22,7 @@ import com.shuffler.R;
 import com.shuffler.handler.PlayerStateUpdateHandler;
 import com.shuffler.handler.QueueRequestHandler;
 import com.shuffler.handler.RequestHandler;
+import com.shuffler.handler.VolleyErrorHandler;
 import com.shuffler.spotify.listener.PlayerStateCallback;
 import com.shuffler.spotify.listener.PlayerStateListener;
 import com.shuffler.spotify.listener.QueueErrorCallback;
@@ -47,7 +54,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-public class ServiceWorker extends Thread implements RequestHandler, PlayerStateUpdateHandler, QueueRequestHandler {
+public class ServiceWorker extends Thread implements RequestHandler, PlayerStateUpdateHandler, QueueRequestHandler, VolleyErrorHandler {
 
     private EnqueueingService service;
     private RequestQueue queue;
@@ -58,6 +65,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
     private List<String> playlists;
     private List<String> tracks;
     private Subscription<PlayerState> subscription;
+    private Integer notificationID = null;
     private static Integer DEFAULT_SPOTIFY_QUEUE_LENGTH;
     private final List<String> spotifyQueue = new ArrayList<>();
     private final BooleanLock startingPlayback = new BooleanLock();
@@ -194,6 +202,13 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         }
     }
 
+    public void resumeServiceWork(int notificationID){
+        if(this.notificationID == notificationID){
+            this.notificationID = null;
+            resumeServiceWork();
+        }
+    }
+
     private void resumeServiceWork(){
         // check if there are pending requests to be forwarded, first
         StringBuilder sb;
@@ -241,38 +256,59 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
 
     public void manageWebRequestError(VolleyError error){
 
-        int statusCode = error.networkResponse.statusCode;
-        if(statusCode == 429){
-            synchronized (resumingServiceWork) {
-                if (!resumingServiceWork.getValue()) {
-                    resumingServiceWork.toggle();
-                    shuffle(tracks);
-                    synchronized (spotifyQueue) {
-                        enqueue();
-                    }
-                    Integer retryAfter = Integer.parseInt(error.networkResponse.headers.get("Retry-After"));
+        if(error instanceof NoConnectionError)
+            handle((NoConnectionError) error);
+        else {
+            int statusCode = error.networkResponse.statusCode;
+            if (statusCode == 429) {
+                // Verify if by canceling all requests in the Volley queue, it is possible to avoid to use the BooleanLock resumingServiceWork
+                synchronized (resumingServiceWork) {
+                    if (!resumingServiceWork.getValue()) {
+                        resumingServiceWork.toggle();
+                        Integer retryAfter = Integer.parseInt(error.networkResponse.headers.get("Retry-After"));
 
-                    Executors.newSingleThreadScheduledExecutor().schedule(
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    resumeServiceWork();
-                                }
-                            },
-                            retryAfter,
-                            TimeUnit.SECONDS
-                    );
+                        Executors.newSingleThreadScheduledExecutor().schedule(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        resumeServiceWork();
+                                    }
+                                },
+                                retryAfter,
+                                TimeUnit.SECONDS
+                        );
+                    }
                 }
+            } else {
+                StringBuilder sb = new StringBuilder(service.getResources().getString(R.string.web_api_error_response))
+                        .append("\n")
+                        .append("Error: ")
+                        .append(statusCode)
+                        .append("\n")
+                        .append(new String(error.networkResponse.data));
+                Toast.makeText(service, sb.toString(), Toast.LENGTH_SHORT).show();
             }
         }
-        else {
-            StringBuilder sb = new StringBuilder(service.getResources().getString(R.string.web_api_error_response))
-                    .append("\n")
-                    .append("Error: ")
-                    .append(statusCode)
-                    .append("\n")
-                    .append(new String(error.networkResponse.data));
-            Toast.makeText(service, sb.toString(), Toast.LENGTH_SHORT).show();
+        if(!tracks.isEmpty()) {
+            shuffle(tracks);
+            synchronized (spotifyQueue) {
+                enqueue();
+            }
+        }
+    }
+
+    @Override
+    public void handle(NoConnectionError e) {
+        if(notificationID == null) {
+            Notification notification = new NotificationCompat.Builder(service, NotificationChannel.DEFAULT_CHANNEL_ID)
+                    .setContentTitle("No internet connection available")
+                    .setContentText("Shuffler is waiting for an Internet connection")
+                    .setSmallIcon(R.mipmap.ic_launcher_round)
+                    .build();
+            NotificationManagerCompat manager = NotificationManagerCompat.from(service);
+            notificationID = ThreadLocalRandom.current().nextInt();
+            manager.notify(notificationID, notification);
+            service.createReceiver(notificationID);
         }
     }
 
@@ -352,7 +388,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
 
                 try {
                     // Unfortunately, the only thing it can be done is assume that, if after 100 milliseconds an error is not received, the track has been successfully enqueued
-                    // Trying to set a ResultCallback on the player.queue CallResult, but it seems it never receives a result, therefore the callback is never invoked
+                    // Tried to set a ResultCallback on the player.queue CallResult, but it seems it never receives a result, therefore the callback is never invoked
 
                     CallResult<Empty> callResult = null;
                     while(spotifyQueue.size() == currentLength) {

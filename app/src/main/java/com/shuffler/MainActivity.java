@@ -14,10 +14,12 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.shuffler.appcontext.AppContext;
 import com.shuffler.broadcast.receiver.NetworkStateChangeListener;
 import com.shuffler.service.EnqueueingService;
 import com.shuffler.spotify.listener.CapabilitiesCallback;
 import com.shuffler.spotify.listener.ConnectionListener;
+import com.shuffler.utility.ConnectivityChecker;
 import com.shuffler.utility.ForceEnqueueBtnListener;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
@@ -30,7 +32,7 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse;
 // TODO: add memory and disk caches to avoid loading playlists and tracks from the web api each time the App is opened
 // TODO: add a way to check whether device is huawei and alert user to put the app among protected apps
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AppContext {
     private String CLIENT_ID;
     private String REDIRECT_CALLBACK;
     private static SpotifyAppRemote mSpotifyAppRemote = null;
@@ -57,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
                     .showAuthView(true)
                     .build();
 
-            br = new NetworkStateChangeListener();
+            br = new NetworkStateChangeListener(this);
             IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
             registerReceiver(br, filter);
         }
@@ -72,32 +74,31 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(br != null)
+        if(br != null) {
             unregisterReceiver(br);
+            br = null;
+        }
     }
 
     private boolean isServiceRunning(){
         return EnqueueingService.isRunning;
     }
 
+    @Override
     public void connect(){
         if(!SpotifyAppRemote.isSpotifyInstalled(this)){
             mainMessage.setText(R.string.client_not_found);
         }
         else {
             mainMessage.setText(R.string.main_activity_bootstrap);
-            if (checkConnection()) {
+            if (ConnectivityChecker.checkConnection(this)) {
+                unregisterReceiver(br);
+                br = null;
                 SpotifyAppRemote.connect(this, params, connectionListener);
             } else {
                 mainMessage.setText(R.string.no_connection_available);
             }
         }
-    }
-
-    private boolean checkConnection(){
-        ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = manager.getActiveNetworkInfo();
-        return (info != null && info.isConnected());
     }
 
     public void setSpotifyAppRemote(SpotifyAppRemote mSpotifyAppRemote){

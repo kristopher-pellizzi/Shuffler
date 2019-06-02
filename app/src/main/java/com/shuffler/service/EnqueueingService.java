@@ -3,23 +3,33 @@ package com.shuffler.service;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 
 import com.shuffler.MainActivity;
 import com.shuffler.R;
+import com.shuffler.appcontext.AppContext;
+import com.shuffler.broadcast.receiver.NetworkStateChangeListener;
+import com.shuffler.utility.ConnectivityChecker;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 
-public class EnqueueingService extends Service {
+public class EnqueueingService extends Service implements AppContext {
 
     public static boolean isRunning;
     public static ServiceWorker worker;
+    private BroadcastReceiver br = null;
+    private Integer notificationID = null;
 
     public EnqueueingService() {
         super();
@@ -45,6 +55,15 @@ public class EnqueueingService extends Service {
         return START_STICKY;
     }
 
+    public void createReceiver(int notificationID){
+        if(br == null){
+            this.notificationID = notificationID;
+            br = new NetworkStateChangeListener(this);
+            IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+            registerReceiver(br, filter);
+        }
+    }
+
     @Override
     public void onDestroy() {
         worker.interrupt();
@@ -57,5 +76,16 @@ public class EnqueueingService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void connect() {
+        if(ConnectivityChecker.checkConnection(this)) {
+            NotificationManagerCompat.from(this).cancel(notificationID);
+            worker.resumeServiceWork(notificationID);
+            notificationID = null;
+            unregisterReceiver(br);
+            br = null;
+        }
     }
 }
