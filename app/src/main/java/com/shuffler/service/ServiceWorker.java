@@ -184,6 +184,8 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
                 synchronized(pendingPlaylistRequests) {
                     synchronized(pendingTrackRequests) {
                         if (pendingPlaylistRequests.isEmpty() && pendingTrackRequests.isEmpty()) {
+                            // In case some tracks have already been enqueued (an error occurred), avoid enqueueing it again
+                            tracks.removeAll(spotifyQueue);
                             shuffle(tracks);
 
                             StringBuilder sb = new StringBuilder("Done! Enjoy your ")
@@ -256,6 +258,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
 
     public void manageWebRequestError(VolleyError error){
 
+        queue.cancelAll(this);
         if(error instanceof NoConnectionError)
             handle((NoConnectionError) error);
         else {
