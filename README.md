@@ -34,7 +34,7 @@ To avoid these kind of problems, Shuffler won't enqueue all songs in the same mo
 Since there is not an easy way to clear Spotify's queue (up to now there is no API offering methods to clear it), the only way the user have to interrupt the enqueueing of tracks is interrupting Shuffler and jump to the last song in the queue. This way, Shuffler won't schedule any new track, and the queue will be considered consumed by the Spotify app.
 
 # Application versions information 
-*Current version: [v0.3.1-alpha][current-version]*
+*Current version: [v0.3.2-alpha][current-version]*
 
 ## Shuffler v0.1-alpha limitations
 - As explicitly announced in the description of the [release](https://github.com/kristopher-pellizzi/Shuffler/releases), this is a ***naive*** implementation. This means that the code is not optimized, nor well organized yet.
