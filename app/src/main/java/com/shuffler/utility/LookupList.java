@@ -64,7 +64,9 @@ public class LookupList<T> implements List<T> {
 
     @Override
     public boolean remove(@androidx.annotation.Nullable Object o) {
-        int val = indexes.remove(o);
+        Integer val = indexes.remove(o);
+        if(val == null)
+            return false;
         for(Map.Entry<T, Integer> entry : indexes.entrySet()){
             if(entry.getValue() > val)
                 indexes.put(entry.getKey(), entry.getValue() - 1);
@@ -145,9 +147,11 @@ public class LookupList<T> implements List<T> {
 
     @Override
     public T set(int index, T element) {
-        T oldItem = remove(index);
+        T oldItem = list.remove(index);
 
-        add(index, element);
+        list.set(index, element);
+        indexes.remove(oldItem);
+        indexes.put(element, index);
         return oldItem;
     }
 
