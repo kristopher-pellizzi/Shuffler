@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity implements AppContext {
     private BroadcastReceiver br = null;
 
     private void createUI(){
+
+        // TODO: add button to show the list of songs in the queue and in the overall list, in this order, possibly separating them
         if(isServiceRunning()) {
             setContentView(R.layout.service_running);
             Button forceEnqBtn = (Button)findViewById(R.id.force_enq_btn);
