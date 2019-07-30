@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class LookupList<T> implements List<T> {
@@ -63,7 +64,11 @@ public class LookupList<T> implements List<T> {
 
     @Override
     public boolean remove(@androidx.annotation.Nullable Object o) {
-        indexes.remove(o);
+        int val = indexes.remove(o);
+        for(Map.Entry<T, Integer> entry : indexes.entrySet()){
+            if(entry.getValue() > val)
+                indexes.put(entry.getKey(), entry.getValue() - 1);
+        }
         return list.remove(o);
     }
 
@@ -198,5 +203,27 @@ public class LookupList<T> implements List<T> {
     @Override
     public List<T> subList(int fromIndex, int toIndex) {
         return list.subList(fromIndex, toIndex);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LookupList<?> that = (LookupList<?>) o;
+        return Objects.equals(indexes, that.indexes) &&
+                Objects.equals(list, that.list);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(indexes, list);
+    }
+
+    public T pop(){
+        T elem;
+
+        elem = list.remove(list.size() - 1);
+        indexes.remove(elem);
+        return elem;
     }
 }
