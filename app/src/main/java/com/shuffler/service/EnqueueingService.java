@@ -2,6 +2,7 @@ package com.shuffler.service;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -39,12 +40,14 @@ public class EnqueueingService extends Service implements AppContext {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String authToken = intent.getStringExtra("token");
 
+        Intent activityIntent = new Intent(this, MainActivity.class);
         Notification notification = new NotificationCompat.Builder(this, NotificationChannel.DEFAULT_CHANNEL_ID)
                 .setContentTitle(getResources().getString(R.string.app_name))
                 .setContentText(getResources().getString(R.string.enqueueing_service_notification_text))
                 .setSmallIcon(R.mipmap.ic_launcher_round)
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText(getResources().getString(R.string.enqueueing_service_notification_big_text)))
+                .setContentIntent(PendingIntent.getActivity(this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .build();
         startForeground(ThreadLocalRandom.current().nextInt(), notification);
 
