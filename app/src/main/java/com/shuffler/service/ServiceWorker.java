@@ -63,7 +63,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
     private PlayerApi player;
     private PlayerState playerState = null;
     private List<String> playlists;
-    private List<String> tracks;
+    private LookupList<String> tracks;
     private Subscription<PlayerState> subscription;
     private Integer notificationID = null;
     private static Integer DEFAULT_SPOTIFY_QUEUE_LENGTH;
@@ -384,7 +384,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
     public void enqueue(){
         synchronized (spotifyQueue) {
             while (!tracks.isEmpty() && spotifyQueue.size() < DEFAULT_SPOTIFY_QUEUE_LENGTH) {
-                String track = tracks.remove(0);
+                String track = tracks.pop();
                 //spotifyQueue.add(track);
                 int currentLength = spotifyQueue.size();
 
