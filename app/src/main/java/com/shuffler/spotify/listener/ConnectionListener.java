@@ -1,6 +1,6 @@
 package com.shuffler.spotify.listener;
 
-import com.shuffler.MainActivity;
+import com.shuffler.activity.MainActivity;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 

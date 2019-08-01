@@ -1,26 +1,23 @@
-package com.shuffler;
+package com.shuffler.activity;
 
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.shuffler.R;
 import com.shuffler.appcontext.AppContext;
 import com.shuffler.broadcast.receiver.NetworkStateChangeListener;
 import com.shuffler.service.EnqueueingService;
 import com.shuffler.spotify.listener.CapabilitiesCallback;
 import com.shuffler.spotify.listener.ConnectionListener;
 import com.shuffler.utility.ConnectivityChecker;
-import com.shuffler.utility.ForceEnqueueBtnListener;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.types.Capabilities;
@@ -44,11 +41,8 @@ public class MainActivity extends AppCompatActivity implements AppContext {
 
     private void createUI(){
 
-        // TODO: add button to show the list of songs in the queue and in the overall list, in this order, possibly separating them
         if(isServiceRunning()) {
             setContentView(R.layout.service_running);
-            Button forceEnqBtn = (Button)findViewById(R.id.force_enq_btn);
-            forceEnqBtn.setOnClickListener(new ForceEnqueueBtnListener());
         }
         else {
             setContentView(R.layout.activity_main);
@@ -150,6 +144,10 @@ public class MainActivity extends AppCompatActivity implements AppContext {
         stopService(new Intent(this, EnqueueingService.class));
     }
 
+    public void showTracks(View view){
+        startActivity(new Intent(this, TracklistActivity.class));
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -165,8 +163,6 @@ public class MainActivity extends AppCompatActivity implements AppContext {
                     Intent service = new Intent(this, EnqueueingService.class)
                             .putExtra("token", authToken);
                     setContentView(R.layout.service_running);
-                    Button forceEnqBtn = (Button) findViewById(R.id.force_enq_btn);
-                    forceEnqBtn.setOnClickListener(new ForceEnqueueBtnListener());
                     startService(service);
                     break;
 

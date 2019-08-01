@@ -1,6 +1,6 @@
 package com.shuffler.spotify.listener;
 
-import com.shuffler.MainActivity;
+import com.shuffler.activity.MainActivity;
 import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.types.Capabilities;
 

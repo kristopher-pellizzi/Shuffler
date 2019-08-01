@@ -1,6 +1,5 @@
 package com.shuffler.spotify.listener;
 
-import com.shuffler.MainActivity;
 import com.shuffler.handler.PlayerStateUpdateHandler;
 import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.PlayerState;

@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.shuffler.MainActivity;
 import com.shuffler.appcontext.AppContext;
 
 public class NetworkStateChangeListener extends BroadcastReceiver {

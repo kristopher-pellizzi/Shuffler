@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".activity.MainActivity">
 
 
     <ScrollView
@@ -46,7 +46,7 @@
 
                 <Button
                     android:id="@+id/dismiss_btn"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="16dp"
@@ -54,19 +54,22 @@
                     android:onClick="stopService"
                     android:text="@string/dismiss_btn"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/force_enq_btn"
+                    app:layout_constraintEnd_toStartOf="@+id/show_tracks_btn"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/service_running_main" />
 
                 <Button
-                    android:id="@+id/force_enq_btn"
-                    android:layout_width="0dp"
+                    android:id="@+id/show_tracks_btn"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
                     android:layout_marginTop="16dp"
-                    android:layout_marginEnd="35dp"
-                    android:text="@string/force_enq_btn"
+                    android:layout_marginEnd="16dp"
+                    android:onClick="showTracks"
+                    android:text="@string/show_tracks_btn"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/dismiss_btn"
                     app:layout_constraintTop_toBottomOf="@+id/service_running_main" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 

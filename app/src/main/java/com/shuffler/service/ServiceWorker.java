@@ -17,7 +17,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.shuffler.MainActivity;
+import com.shuffler.activity.MainActivity;
 import com.shuffler.R;
 import com.shuffler.handler.PlayerStateUpdateHandler;
 import com.shuffler.handler.QueueRequestHandler;
@@ -63,11 +63,11 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
     private PlayerApi player;
     private PlayerState playerState = null;
     private List<String> playlists;
-    private LookupList<String> tracks;
+    private static LookupList<String> tracks;
     private Subscription<PlayerState> subscription;
     private Integer notificationID = null;
     private static Integer DEFAULT_SPOTIFY_QUEUE_LENGTH;
-    private final List<String> spotifyQueue = new ArrayList<>();
+    private final static List<String> spotifyQueue = new ArrayList<>();
     private final BooleanLock startingPlayback = new BooleanLock();
     private final BooleanLock resumingServiceWork = new BooleanLock();
     private final Set<String> pendingPlaylistRequests = new HashSet<>();
@@ -146,7 +146,10 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
             String[] trackArray = new String[JSONTrackArray.length()];
 
             for(int i = 0; i < trackArray.length; i++){
-                trackArray[i] = JSONTrackArray.getJSONObject(i).getJSONObject("track").getString("uri");
+                JSONObject trackObject = JSONTrackArray.getJSONObject(i).getJSONObject("track");
+                trackArray[i] = trackObject.getString("uri");
+                // Put in the map pair <author, title> for each track
+                EnqueueingService.tracksInfo.put(trackArray[i], new Pair<String, String>(trackObject.getJSONArray("artists").getJSONObject(0).getString("name"), trackObject.getString("name")));
             }
 
             tracks.addAll(Arrays.asList(trackArray));
@@ -156,7 +159,6 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
                         startingPlayback.setValue(true);
                         player.play(trackArray[0]);
                         tracks.remove(trackArray[0]);
-
                     }
                 }
             }
@@ -464,5 +466,13 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
             Collections.reverse(list);
         }
         Collections.reverse(list);
+    }
+
+    public static List<String> getSpotifyQueue(){
+        return spotifyQueue;
+    }
+
+    public static List<String> getTrackList(){
+        return tracks;
     }
 }
