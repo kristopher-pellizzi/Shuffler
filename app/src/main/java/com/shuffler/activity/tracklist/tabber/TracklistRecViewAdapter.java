@@ -40,8 +40,7 @@ public class TracklistRecViewAdapter extends RecyclerView.Adapter<TracklistRecVi
 
     // TODO: create event handling mechanism to update the dataset and the shown list when the list changes (i.e. when methods 'enqueue' is called and songs are removed from list 'tracks')
     public void setDataset(List<String> dataset){
-        this.dataset.clear();
-        this.dataset.addAll(dataset);
+        this.dataset = dataset;
     }
 
     public class TrackViewHolder extends RecyclerView.ViewHolder {
