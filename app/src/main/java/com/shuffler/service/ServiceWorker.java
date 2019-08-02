@@ -387,7 +387,6 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
         synchronized (spotifyQueue) {
             while (!tracks.isEmpty() && spotifyQueue.size() < DEFAULT_SPOTIFY_QUEUE_LENGTH) {
                 String track = tracks.pop();
-                //spotifyQueue.add(track);
                 int currentLength = spotifyQueue.size();
 
 
