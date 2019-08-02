@@ -55,8 +55,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class ServiceWorker extends Thread implements RequestHandler, PlayerStateUpdateHandler, QueueRequestHandler, VolleyErrorHandler {
-
-    // comment
+    
     private EnqueueingService service;
     private RequestQueue queue;
     private String authToken;
