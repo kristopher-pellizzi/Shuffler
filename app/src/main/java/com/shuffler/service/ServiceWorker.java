@@ -19,6 +19,9 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.shuffler.activity.MainActivity;
 import com.shuffler.R;
+import com.shuffler.activity.tracklist.tabber.fragment.AllTracksFragment;
+import com.shuffler.activity.tracklist.tabber.fragment.EnqueuedFragment;
+import com.shuffler.activity.tracklist.tabber.fragment.ToBeEnqueuedFragment;
 import com.shuffler.handler.PlayerStateUpdateHandler;
 import com.shuffler.handler.QueueRequestHandler;
 import com.shuffler.handler.RequestHandler;
@@ -55,7 +58,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class ServiceWorker extends Thread implements RequestHandler, PlayerStateUpdateHandler, QueueRequestHandler, VolleyErrorHandler {
-    
+
     private EnqueueingService service;
     private RequestQueue queue;
     private String authToken;
@@ -189,9 +192,11 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
                             // In case some tracks have already been enqueued (an error occurred), avoid enqueueing it again
                             tracks.removeAll(spotifyQueue);
                             shuffle(tracks);
+                            List<String> allTracks = new ArrayList<>(EnqueueingService.tracksInfo.keySet());
+                            AllTracksFragment.getInstance().onUpdateTracklist(allTracks);
 
                             StringBuilder sb = new StringBuilder("Done! Enjoy your ")
-                                    .append(tracks.size() + spotifyQueue.size() + 1)
+                                    .append(allTracks.size())
                                     .append(" tracks");
                             synchronized (spotifyQueue) {
                                 enqueue();
@@ -408,6 +413,10 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
 
             }
         }
+        EnqueuedFragment.getInstance().onUpdateTracklist(spotifyQueue);
+        List<String> toBeEnqueued = new ArrayList<>(tracks);
+        Collections.reverse(toBeEnqueued);
+        ToBeEnqueuedFragment.getInstance().onUpdateTracklist(toBeEnqueued);
         synchronized (pendingPlaylistRequests){
             synchronized (pendingTrackRequests){
                 if(tracks.isEmpty() && pendingTrackRequests.isEmpty() && pendingPlaylistRequests.isEmpty()){
@@ -457,6 +466,7 @@ public class ServiceWorker extends Thread implements RequestHandler, PlayerState
                 } while (!trackUri.equals(launchedTrack) && !spotifyQueue.isEmpty());
             }
         }
+        EnqueuedFragment.getInstance().onUpdateTracklist(spotifyQueue);
     }
 
     private void shuffle(List<?> list){

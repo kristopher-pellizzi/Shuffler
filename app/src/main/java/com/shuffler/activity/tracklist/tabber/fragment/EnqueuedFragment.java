@@ -29,15 +29,8 @@ public class EnqueuedFragment extends Fragment {
 
     private EnqueuedFragment(){
         titles = new ArrayList<>();
-        Map<String, Pair<String, String>> trackInfo = EnqueueingService.tracksInfo;
-        for(String uri : ServiceWorker.getSpotifyQueue()) {
-            Pair<String, String> val = trackInfo.get(uri);
-            StringBuilder sb = new StringBuilder(val.first)
-                    .append(" - ")
-                    .append(val.second);
-            titles.add(sb.toString());
-        }
-        adapter = new TracklistRecViewAdapter(titles);
+        adapter = new TracklistRecViewAdapter();
+        onUpdateTracklist(ServiceWorker.getSpotifyQueue());
     }
 
     public static EnqueuedFragment getInstance(){
@@ -56,5 +49,19 @@ public class EnqueuedFragment extends Fragment {
         recView.setAdapter(adapter);
         recView.setLayoutManager(manager);
         return view;
+    }
+
+    public void onUpdateTracklist(List<String> tracklist){
+        titles.clear();
+        Map<String, Pair<String, String>> trackInfo = EnqueueingService.tracksInfo;
+        for(String uri : tracklist) {
+            Pair<String, String> val = trackInfo.get(uri);
+            StringBuilder sb = new StringBuilder(val.first)
+                    .append(" - ")
+                    .append(val.second);
+            titles.add(sb.toString());
+        }
+        adapter.setDataset(titles);
+        adapter.notifyDataSetChanged();
     }
 }
