@@ -2,12 +2,14 @@ package com.shuffler.service;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Pair;
 
@@ -45,7 +47,12 @@ public class EnqueueingService extends Service implements AppContext {
         String authToken = intent.getStringExtra("token");
 
         Intent activityIntent = new Intent(this, MainActivity.class);
-        Notification notification = new NotificationCompat.Builder(this, NotificationChannel.DEFAULT_CHANNEL_ID)
+        String notificationID = "shuffler_ID";
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(notificationID, "Shuffler Channel", NotificationManager.IMPORTANCE_DEFAULT);
+            getSystemService(NotificationManager.class).createNotificationChannel(channel);
+        }
+        Notification notification = new NotificationCompat.Builder(this, notificationID)
                 .setContentTitle(getResources().getString(R.string.app_name))
                 .setContentText(getResources().getString(R.string.enqueueing_service_notification_text))
                 .setSmallIcon(R.mipmap.ic_launcher_round)
