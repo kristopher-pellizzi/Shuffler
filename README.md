@@ -34,7 +34,7 @@ To avoid these kind of problems, Shuffler won't enqueue all songs in the same mo
 Since there is not an easy way to clear Spotify's queue (up to now there is no API offering methods to clear it), the only way the user have to interrupt the enqueueing of tracks is interrupting Shuffler and jump to the last song in the queue. This way, Shuffler won't schedule any new track, and the queue will be considered consumed by the Spotify app.
 
 # Application versions information 
-*Current version: [v0.3.2-alpha][current-version]*
+*Current version: [v0.4-alpha][current-version]*
 
 ## Shuffler v0.1-alpha limitations
 - As explicitly announced in the description of the [release](https://github.com/kristopher-pellizzi/Shuffler/releases), this is a ***naive*** implementation. This means that the code is not optimized, nor well organized yet.
@@ -66,8 +66,14 @@ Shuffler v0.2-alpha uses a *foreground service* to perform the enqueueing task i
 - Same as v0.2-alpha. Check them out in the [Shuffler v0.2-alpha limitations](#shuffler-v02-alpha-limitations) section.
 - The UI won't update again after service is dismissed. In order to relaunch the service the user must close the application from the recent apps tab and relaunch Shuffler.
 
+## Shuffler v0.4-alpha changelog
+- Bug causing the app crash on devices with Android version higher or equal to Android 8 solved
+
+## Shuffler v0.4-alpha limitations
+- Same as v0.3-alpha. Check them out in the [Shuffler v0.3-alpha limitations](#shuffler-v03-alpha-limitations) section.
+
 ## **Warning** for Huawei devices owners only
 Shuffler makes use of a *foreground service* in order to allow the application enqueue new songs until the end without the application being actually open. In huawei devices, however, there is an implementation of *Protected Apps*. In practice, each app that is not set as 'Protected', will be closed when the screen is locked or the process is cleared from the recent apps tab. To allow Shuffler working properly, please enable it as a Protected App in the device settings. Usually, the path is Settings > Advanced > Battery > Protected Apps. However, this may vary according to the device model and Android version, as well. In future implementations there will be a disclaimer notifying the user about the necessity of declaring the application as a Protected App.
 
-[current-version]: #shuffler-v03-alpha-changelog
-[current-version-limitations]: #shuffler-v03-alpha-limitations
+[current-version]: #shuffler-v04-alpha-changelog
+[current-version-limitations]: #shuffler-v04-alpha-limitations
